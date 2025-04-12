@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
 )
 
 type hunterResp struct {

@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/levels"
 	"github.com/projectdiscovery/ratelimit"
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
 )
 
 func TestSourcesWithoutKeys(t *testing.T) {
@@ -24,14 +24,14 @@ func TestSourcesWithoutKeys(t *testing.T) {
 	}
 
 	ignoredSources := []string{
-		"commoncrawl",     // commoncrawl is under resourced and will likely time-out so step over it for this test https://groups.google.com/u/2/g/common-crawl/c/3QmQjFA_3y4/m/vTbhGqIBBQAJ
-		"riddler",         // failing due to cloudfront protection
-		"crtsh",           // Fails in GH Action (possibly IP-based ban) causing a timeout.
-		"hackertarget",    // Fails in GH Action (possibly IP-based ban) but works locally
-		"waybackarchive",  // Fails randomly
-		"alienvault",      // 503 Service Temporarily Unavailable
-		"digitorus",       // failing with "Failed to retrieve certificate"
-		"dnsdumpster",     // failing with "unexpected status code 403 received"
+		"commoncrawl",    // commoncrawl is under resourced and will likely time-out so step over it for this test https://groups.google.com/u/2/g/common-crawl/c/3QmQjFA_3y4/m/vTbhGqIBBQAJ
+		"riddler",        // failing due to cloudfront protection
+		"crtsh",          // Fails in GH Action (possibly IP-based ban) causing a timeout.
+		"hackertarget",   // Fails in GH Action (possibly IP-based ban) but works locally
+		"waybackarchive", // Fails randomly
+		"alienvault",     // 503 Service Temporarily Unavailable
+		"digitorus",      // failing with "Failed to retrieve certificate"
+		"dnsdumpster",    // failing with "unexpected status code 403 received"
 	}
 
 	domain := "hackerone.com"

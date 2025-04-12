@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 	"github.com/projectdiscovery/utils/ptr"
 )
 

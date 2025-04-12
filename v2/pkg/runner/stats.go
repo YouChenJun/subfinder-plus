@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 	"github.com/projectdiscovery/gologger"
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
 	"golang.org/x/exp/maps"
 )
 

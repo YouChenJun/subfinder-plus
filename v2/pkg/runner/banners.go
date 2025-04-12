@@ -2,7 +2,6 @@ package runner
 
 import (
 	"github.com/projectdiscovery/gologger"
-	updateutils "github.com/projectdiscovery/utils/update"
 )
 
 const banner = `
@@ -29,6 +28,7 @@ func showBanner() {
 func GetUpdateCallback() func() {
 	return func() {
 		showBanner()
-		updateutils.GetUpdateToolCallback("subfinder", version)()
+		//去除原始检查更新
+		//updateutils.GetUpdateToolCallback("subfinder", version)()
 	}
 }
