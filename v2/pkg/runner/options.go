@@ -51,6 +51,7 @@ type Options struct {
 	Output             io.Writer
 	OutputFile         string               // Output is the file to write found subdomains to.
 	OutputDirectory    string               // OutputDirectory is the directory to write results to in case list of domains is given
+	RespFileDirectory  string               // RespFileDirectory is the directory to write response files to in case list of domains is given
 	Sources            goflags.StringSlice  `yaml:"sources,omitempty"`         // Sources contains a comma-separated list of sources to use for enumeration
 	ExcludeSources     goflags.StringSlice  `yaml:"exclude-sources,omitempty"` // ExcludeSources contains the comma-separated sources to not include in the enumeration process
 	Resolvers          goflags.StringSlice  `yaml:"resolvers,omitempty"`       // Resolvers is the comma-separated resolvers to use for enumeration
@@ -116,6 +117,7 @@ func ParseOptions() *Options {
 		flagSet.StringVarP(&options.OutputDirectory, "output-dir", "oD", "", "directory to write output (-dL only)"),
 		flagSet.BoolVarP(&options.CaptureSources, "collect-sources", "cs", false, "include all sources in the output (-json only)"),
 		flagSet.BoolVarP(&options.HostIP, "ip", "oI", false, "include host IP in output (-active only)"),
+		flagSet.StringVarP(&options.RespFileDirectory, "resp-dir", "oR", "", "directory to write response files (-oR only)"),
 	)
 
 	flagSet.CreateGroup("configuration", "Configuration",
@@ -258,6 +260,6 @@ var defaultRateLimits = []string{
 	// "gitlab=2/s",
 	"github=83/m",
 	"hudsonrock=5/s",
-	"hunter=2/s",
-	"quake=2/s",
+	"hunter=1/s",
+	"quake=1/s",
 }

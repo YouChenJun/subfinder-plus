@@ -30,6 +30,12 @@ type HostEntry struct {
 	Source string
 }
 
+// ResponseData contains the source and response,used for output
+type ResponseData struct {
+	Source   string
+	Response string
+}
+
 // Result contains the result for a host resolution
 type Result struct {
 	Type   ResultType

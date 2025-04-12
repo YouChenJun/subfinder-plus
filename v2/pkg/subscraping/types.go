@@ -79,10 +79,11 @@ type Session struct {
 
 // Result is a result structure returned by a source
 type Result struct {
-	Type   ResultType
-	Source string
-	Value  string
-	Error  error
+	Type     ResultType
+	Source   string
+	Value    string
+	Response string
+	Error    error
 }
 
 // ResultType is the type of result returned by the source
@@ -92,4 +93,5 @@ type ResultType int
 const (
 	Subdomain ResultType = iota
 	Error
+	Response = iota
 )

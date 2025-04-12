@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -58,8 +59,8 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 		}
 		var pages = 1
 
-		// quake api doc https://quake.360.cn/quake/#/help
-		var requestBody = []byte(fmt.Sprintf(`{"query":"domain: %s", "include":["service.http.host"], "latest": true, "start":0, "size":500, "latest":true}`, domain))
+		// quake api doc https://quake.360.cn/quake/#/help remove "include":["service.http.host"], can get all data
+		var requestBody = []byte(fmt.Sprintf(`{"query":"domain: %s", "latest": true, "start":0, "size":500, "latest":true}`, domain))
 		resp, err := session.Post(ctx, "https://quake.360.net/api/v3/search/quake_service", "", map[string]string{
 			"Content-Type": "application/json", "X-QuakeToken": randomApiKey,
 		}, bytes.NewReader(requestBody))
@@ -71,15 +72,26 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 		}
 
 		var response quakeResults
-		err = jsoniter.NewDecoder(resp.Body).Decode(&response)
+		//现读取响应体内容
+		// 先读取响应体内容
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
 			s.errors++
-			resp.Body.Close()
 			return
 		}
-		resp.Body.Close()
+		defer resp.Body.Close() // 确保 Body 被关
 
+		// 将响应体转换为字符串
+		responseData := string(bodyBytes)
+
+		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(bodyBytes, &response)
+		if err != nil {
+			results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
+			s.errors++
+			return
+		}
+		fmt.Println(responseData)
 		if response.Code != 0 {
 			results <- subscraping.Result{
 				Source: s.Name(), Type: subscraping.Error, Error: fmt.Errorf("%s", response.Message),
@@ -94,12 +106,13 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 				if strings.ContainsAny(subdomain, "暂无权限") {
 					subdomain = ""
 				}
-				results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain}
+				results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain, Response: responseData}
+				results <- subscraping.Result{Source: s.Name(), Type: subscraping.Response, Response: responseData}
 				s.results++
 			}
 		}
 		pages = int(response.Meta.Pagination.Total/500) + 1
-		if pages > 2 {
+		if pages > 1 {
 			for currentPage := 2; currentPage <= pages; currentPage++ {
 				var start = (currentPage - 1) * 500
 				requestBody = []byte(fmt.Sprintf(`{"query":"domain: %s", "include":["service.http.host"], "latest": true, "start":%d, "size":500 ,"latest":true}`, domain, start))
@@ -136,7 +149,8 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 						if strings.ContainsAny(subdomain, "暂无权限") {
 							subdomain = ""
 						}
-						results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain}
+						results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain, Response: responseData}
+						results <- subscraping.Result{Source: s.Name(), Type: subscraping.Response, Response: responseData}
 						s.results++
 					}
 				}

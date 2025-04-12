@@ -3,6 +3,7 @@ package runner
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -234,4 +235,67 @@ func writeSourcePlainHost(_ string, sourceMap map[string]map[string]struct{}, wr
 		sb.Reset()
 	}
 	return bufwriter.Flush()
+}
+
+func WriteResponseData(results map[string][]resolve.ResponseData, RespFileDirectory string) {
+	RespFileDirectory = filepath.Clean(RespFileDirectory)
+	writers := make(map[string]struct {
+		file   *os.File
+		writer *bufio.Writer
+	})
+
+	// 统一清理资源
+	defer func() {
+		for _, w := range writers {
+			// 确保先刷新缓冲区
+			if err := w.writer.Flush(); err != nil {
+				fmt.Printf("刷新缓冲区失败: %v\n", err)
+			}
+			// 然后关闭文件
+			if err := w.file.Close(); err != nil {
+				fmt.Printf("关闭文件失败: %v\n", err)
+			}
+		}
+	}()
+
+	for source, responseDataSlice := range results {
+		if source == "" {
+			continue
+		}
+
+		w, exists := writers[source]
+		if !exists {
+			filename := filepath.Join(RespFileDirectory, source+".json")
+
+			file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+			if err != nil {
+				fmt.Printf("创建文件失败 [%s]: %w\n", filename, err)
+				continue
+			}
+
+			w = struct {
+				file   *os.File
+				writer *bufio.Writer
+			}{
+				file:   file,
+				writer: bufio.NewWriter(file),
+			}
+			writers[source] = w
+		}
+
+		for _, responseData := range responseDataSlice {
+			data := responseData.Response + "\n"
+
+			// 执行缓冲写入
+			if _, err := w.writer.WriteString(data); err != nil {
+				fmt.Printf("数据写入失败 [%s]: %w\n", source, err)
+				continue
+			}
+		}
+
+		// 立即刷新缓冲区 如需保证实时写入可启用，但会影响性能
+		if err := w.writer.Flush(); err != nil {
+			fmt.Printf("缓冲区刷新失败 [%s]: %w\n", source, err)
+		}
+	}
 }
