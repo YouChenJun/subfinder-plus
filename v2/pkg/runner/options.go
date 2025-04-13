@@ -10,11 +10,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/passive"
+	"github.com/YouChenJun/subfinder-plus/pkg/resolve"
 	"github.com/projectdiscovery/chaos-client/pkg/chaos"
 	"github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"
-	"github.com/projectdiscovery/subfinder/v2/pkg/passive"
-	"github.com/projectdiscovery/subfinder/v2/pkg/resolve"
 	fileutil "github.com/projectdiscovery/utils/file"
 	folderutil "github.com/projectdiscovery/utils/folder"
 	logutil "github.com/projectdiscovery/utils/log"

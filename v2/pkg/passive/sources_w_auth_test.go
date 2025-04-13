@@ -12,10 +12,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/levels"
 	"github.com/projectdiscovery/ratelimit"
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
 )
 
 func TestSourcesWithKeys(t *testing.T) {

@@ -7,9 +7,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/retryablehttp-go"
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
 	errorutil "github.com/projectdiscovery/utils/errors"
 	"github.com/projectdiscovery/utils/generic"
 	urlutil "github.com/projectdiscovery/utils/url"

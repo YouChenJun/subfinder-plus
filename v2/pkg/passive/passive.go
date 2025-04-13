@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 	"github.com/projectdiscovery/ratelimit"
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
 )
 
 type EnumerationOptions struct {

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 )
 
 // Source is the passive scraping agent

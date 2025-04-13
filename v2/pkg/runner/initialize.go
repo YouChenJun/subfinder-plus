@@ -4,9 +4,9 @@ import (
 	"net"
 	"strings"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/passive"
+	"github.com/YouChenJun/subfinder-plus/pkg/resolve"
 	"github.com/projectdiscovery/dnsx/libs/dnsx"
-	"github.com/projectdiscovery/subfinder/v2/pkg/passive"
-	"github.com/projectdiscovery/subfinder/v2/pkg/resolve"
 )
 
 // initializePassiveEngine creates the passive engine and loads sources etc

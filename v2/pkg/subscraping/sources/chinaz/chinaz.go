@@ -7,8 +7,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/YouChenJun/subfinder-plus/pkg/subscraping"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/projectdiscovery/subfinder/v2/pkg/subscraping"
 )
 
 // Source is the passive scraping agent
