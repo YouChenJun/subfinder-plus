@@ -91,7 +91,6 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 			s.errors++
 			return
 		}
-		fmt.Println(responseData)
 		if response.Code != 0 {
 			results <- subscraping.Result{
 				Source: s.Name(), Type: subscraping.Error, Error: fmt.Errorf("%s", response.Message),
