@@ -1,0 +1,21 @@
+main-plus:
+  tag_push:
+    stages:
+      - name: changelog
+        image: cnbcool/changelog
+        exports:
+          latestChangeLog: LATEST_CHANGE_LOG
+      - name: create release
+        type: git:release
+        options:
+          title: release
+          description: ${LATEST_CHANGE_LOG}
+      - name: go mod
+        script: go mod vendor
+      - name: go build
+        script: go build -o subfinder-plus
+      - name: release 上传附件
+        image: cnbcool/attachments:latest
+        settings:
+          attachments:
+            - subfinder-plus
