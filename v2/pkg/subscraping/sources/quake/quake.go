@@ -75,7 +75,6 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 		//现读取响应体内容
 		// 先读取响应体内容
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		fmt.Println(string(bodyBytes))
 		if err != nil {
 			results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
 			s.errors++
