@@ -1,10 +1,10 @@
-main-plus:
+$:
   tag_push:
     stages:
       - name: changelog
         image: cnbcool/changelog
         exports:
-          latestChangeLog: LATEST_CHANGE_LOG
+            latestChangeLog: LATEST_CHANGE_LOG
       - name: create release
         type: git:release
         options:
