@@ -58,9 +58,9 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 			return
 		}
 		var pages = 1
-
+		var pagesize = 100
 		// quake api doc https://quake.360.cn/quake/#/help remove "include":["service.http.host"], can get all data
-		var requestBody = []byte(fmt.Sprintf(`{"query":"domain: %s", "latest": true, "start":0, "size":500, "latest":true}`, domain))
+		var requestBody = []byte(fmt.Sprintf(`{"query":"domain: %s", "latest": true, "start":0, "size":%d, "latest":true}`, domain, pagesize))
 		resp, err := session.Post(ctx, "https://quake.360.net/api/v3/search/quake_service", "", map[string]string{
 			"Content-Type": "application/json", "X-QuakeToken": randomApiKey,
 		}, bytes.NewReader(requestBody))
@@ -75,6 +75,7 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 		//现读取响应体内容
 		// 先读取响应体内容
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(bodyBytes))
 		if err != nil {
 			results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
 			s.errors++
@@ -110,11 +111,11 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 				s.results++
 			}
 		}
-		pages = int(response.Meta.Pagination.Total/500) + 1
+		pages = int(response.Meta.Pagination.Total/pagesize) + 1
 		if pages > 1 {
 			for currentPage := 2; currentPage <= pages; currentPage++ {
-				var start = (currentPage - 1) * 500
-				requestBody = []byte(fmt.Sprintf(`{"query":"domain: %s", "include":["service.http.host"], "latest": true, "start":%d, "size":500 ,"latest":true}`, domain, start))
+				var start = (currentPage - 1) * pagesize
+				requestBody = []byte(fmt.Sprintf(`{"query":"domain: %s","latest": true, "start":%d, "size":%d ,"latest":true}`, domain, start, pagesize))
 				resp, err = session.Post(ctx, "https://quake.360.net/api/v3/search/quake_service", "", map[string]string{
 					"Content-Type": "application/json", "X-QuakeToken": randomApiKey,
 				}, bytes.NewReader(requestBody))

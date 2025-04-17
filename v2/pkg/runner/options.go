@@ -18,7 +18,6 @@ import (
 	fileutil "github.com/projectdiscovery/utils/file"
 	folderutil "github.com/projectdiscovery/utils/folder"
 	logutil "github.com/projectdiscovery/utils/log"
-	updateutils "github.com/projectdiscovery/utils/update"
 )
 
 var (
@@ -183,14 +182,15 @@ func ParseOptions() *Options {
 	showBanner()
 
 	if !options.DisableUpdateCheck {
-		latestVersion, err := updateutils.GetToolVersionCallback("subfinder", version)()
-		if err != nil {
-			if options.Verbose {
-				gologger.Error().Msgf("subfinder version check failed: %v", err.Error())
-			}
-		} else {
-			gologger.Info().Msgf("Current subfinder version %v %v", version, updateutils.GetVersionDescription(version, latestVersion))
-		}
+		gologger.Info().Msgf("暂未配置更新...")
+		//latestVersion, err := updateutils.GetToolVersionCallback("subfinder", version)()
+		//if err != nil {
+		//	if options.Verbose {
+		//		gologger.Error().Msgf("subfinder version check failed: %v", err.Error())
+		//	}
+		//} else {
+		//	gologger.Info().Msgf("Current subfinder version %v %v", version, updateutils.GetVersionDescription(version, latestVersion))
+		//}
 	}
 
 	if options.ListSources {
