@@ -238,7 +238,9 @@ func writeSourcePlainHost(_ string, sourceMap map[string]map[string]struct{}, wr
 }
 
 func WriteResponseData(results map[string][]resolve.ResponseData, RespFileDirectory string) {
-	RespFileDirectory = filepath.Clean(RespFileDirectory)
+	if !strings.HasSuffix(RespFileDirectory, "/") {
+		RespFileDirectory += "/"
+	}
 	writers := make(map[string]struct {
 		file   *os.File
 		writer *bufio.Writer
@@ -266,8 +268,7 @@ func WriteResponseData(results map[string][]resolve.ResponseData, RespFileDirect
 		w, exists := writers[source]
 		if !exists {
 			filename := filepath.Join(RespFileDirectory, source+".json")
-
-			file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+			file, err := createFile(filename, false) // 使用 createFile 方法，不追加内容
 			if err != nil {
 				fmt.Printf("创建文件失败 [%s]: %w\n", filename, err)
 				continue
@@ -298,4 +299,33 @@ func WriteResponseData(results map[string][]resolve.ResponseData, RespFileDirect
 			fmt.Printf("缓冲区刷新失败 [%s]: %w\n", source, err)
 		}
 	}
+}
+func createFile(filename string, appendToFile bool) (*os.File, error) {
+	if filename == "" {
+		return nil, errors.New("empty filename")
+	}
+
+	dir := filepath.Dir(filename)
+
+	if dir != "" {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			err := os.MkdirAll(dir, os.ModePerm)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	var file *os.File
+	var err error
+	if appendToFile {
+		file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	} else {
+		file, err = os.Create(filename)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }
