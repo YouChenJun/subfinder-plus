@@ -10,6 +10,8 @@ $:
         options:
           title: release
           description: ${LATEST_CHANGE_LOG}
+      - name: go to workspace
+        script: cd v2
       - name: go mod
         script: go mod vendor
       - name: go build
