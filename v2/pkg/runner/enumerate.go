@@ -50,7 +50,7 @@ func (r *Runner) EnumerateSingleDomainWithCtx(ctx context.Context, domain string
 
 	// Run the passive subdomain enumeration
 	now := time.Now()
-	passiveResults := r.passiveAgent.EnumerateSubdomainsWithCtx(ctx, domain, r.options.Proxy, r.options.RateLimit, r.options.Timeout, time.Duration(r.options.MaxEnumerationTime)*time.Minute, passive.WithCustomRateLimit(r.rateLimit))
+	passiveResults := r.passiveAgent.EnumerateSubdomainsWithCtx(ctx, domain, r.options.Proxy, r.options.RateLimit, r.options.Timeout, time.Duration(r.options.MaxEnumerationTime)*time.Minute, r.options.RespFileDirectory, passive.WithCustomRateLimit(r.rateLimit))
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -59,8 +59,7 @@ func (r *Runner) EnumerateSingleDomainWithCtx(ctx context.Context, domain string
 	// Create a map to track sources for each host
 	sourceMap := make(map[string]map[string]struct{})
 	skippedCounts := make(map[string]int)
-	//Save response info
-	ResponseData := make(map[string][]resolve.ResponseData)
+
 	// Process the results in a separate goroutine
 	go func() {
 		for result := range passiveResults {
@@ -104,13 +103,6 @@ func (r *Runner) EnumerateSingleDomainWithCtx(ctx context.Context, domain string
 						resolutionPool.Tasks <- hostEntry
 					}
 				}
-			case subscraping.Response:
-				//Save the Response data to ResponseData map
-				responseData := resolve.ResponseData{
-					Source:   result.Source,
-					Response: result.Response,
-				}
-				ResponseData[result.Source] = append(ResponseData[result.Source], responseData) // 追加到切片
 			}
 		}
 		// Close the task channel only if wildcards are asked to be removed
@@ -196,9 +188,6 @@ func (r *Runner) EnumerateSingleDomainWithCtx(ctx context.Context, domain string
 			}
 		}
 		printStatistics(statistics)
-	}
-	if r.options.RespFileDirectory != "" {
-		WriteResponseData(ResponseData, r.options.RespFileDirectory)
 	}
 	return sourceMap, nil
 }

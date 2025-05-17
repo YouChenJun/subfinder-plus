@@ -74,7 +74,8 @@ type Session struct {
 	// Client is the current http client
 	Client *http.Client
 	// Rate limit instance
-	MultiRateLimiter *ratelimit.MultiLimiter
+	MultiRateLimiter  *ratelimit.MultiLimiter
+	RespFileDirectory string // RespFileDirectory is the directory to write response files to in case list of domains is given
 }
 
 // Result is a result structure returned by a source
@@ -93,5 +94,4 @@ type ResultType int
 const (
 	Subdomain ResultType = iota
 	Error
-	Response = iota
 )

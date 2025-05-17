@@ -26,12 +26,12 @@ func WithCustomRateLimit(crl *subscraping.CustomRateLimit) EnumerateOption {
 }
 
 // EnumerateSubdomains wraps EnumerateSubdomainsWithCtx with an empty context
-func (a *Agent) EnumerateSubdomains(domain string, proxy string, rateLimit int, timeout int, maxEnumTime time.Duration, options ...EnumerateOption) chan subscraping.Result {
-	return a.EnumerateSubdomainsWithCtx(context.Background(), domain, proxy, rateLimit, timeout, maxEnumTime, options...)
+func (a *Agent) EnumerateSubdomains(domain string, proxy string, rateLimit int, timeout int, maxEnumTime time.Duration, RespFileDirectory string, options ...EnumerateOption) chan subscraping.Result {
+	return a.EnumerateSubdomainsWithCtx(context.Background(), domain, proxy, rateLimit, timeout, maxEnumTime, RespFileDirectory, options...)
 }
 
 // EnumerateSubdomainsWithCtx enumerates all the subdomains for a given domain
-func (a *Agent) EnumerateSubdomainsWithCtx(ctx context.Context, domain string, proxy string, rateLimit int, timeout int, maxEnumTime time.Duration, options ...EnumerateOption) chan subscraping.Result {
+func (a *Agent) EnumerateSubdomainsWithCtx(ctx context.Context, domain string, proxy string, rateLimit int, timeout int, maxEnumTime time.Duration, RespFileDirectory string, options ...EnumerateOption) chan subscraping.Result {
 	results := make(chan subscraping.Result)
 
 	go func() {
@@ -49,7 +49,7 @@ func (a *Agent) EnumerateSubdomainsWithCtx(ctx context.Context, domain string, p
 			}
 			return
 		}
-		session, err := subscraping.NewSession(domain, proxy, multiRateLimiter, timeout)
+		session, err := subscraping.NewSession(domain, proxy, multiRateLimiter, timeout, RespFileDirectory)
 		if err != nil {
 			results <- subscraping.Result{
 				Type: subscraping.Error, Error: fmt.Errorf("could not init passive session for %s: %s", domain, err),

@@ -45,6 +45,7 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 	results := make(chan subscraping.Result)
 	s.errors = 0
 	s.results = 0
+	var responseStrings []string
 
 	go func() {
 		defer func(startTime time.Time) {
@@ -72,7 +73,6 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 		}
 
 		var response quakeResults
-		//现读取响应体内容
 		// 先读取响应体内容
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -81,9 +81,6 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 			return
 		}
 		defer resp.Body.Close() // 确保 Body 被关
-
-		// 将响应体转换为字符串
-		responseData := string(bodyBytes)
 
 		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(bodyBytes, &response)
 		if err != nil {
@@ -105,14 +102,16 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 				if strings.ContainsAny(subdomain, "暂无权限") {
 					subdomain = ""
 				}
-				results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain, Response: responseData}
-				results <- subscraping.Result{Source: s.Name(), Type: subscraping.Response, Response: responseData}
+				results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain}
 				s.results++
 			}
+			responseStrings = append(responseStrings, string(bodyBytes))
 		}
 		pages = int(response.Meta.Pagination.Total/pagesize) + 1
 		if pages > 1 {
 			for currentPage := 2; currentPage <= pages; currentPage++ {
+				//限速
+				time.Sleep(10 * time.Second)
 				var start = (currentPage - 1) * pagesize
 				requestBody = []byte(fmt.Sprintf(`{"query":"domain: %s","latest": true, "start":%d, "size":%d ,"latest":true}`, domain, start, pagesize))
 				resp, err = session.Post(ctx, "https://quake.360.net/api/v3/search/quake_service", "", map[string]string{
@@ -122,15 +121,21 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 					results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
 					s.errors++
 					session.DiscardHTTPResponse(resp)
-					return
+					continue
 				}
-
-				err = jsoniter.NewDecoder(resp.Body).Decode(&response)
+				//读取响应信息
+				bodyBytes, err = ioutil.ReadAll(resp.Body)
 				if err != nil {
 					results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
 					s.errors++
 					resp.Body.Close()
-					return
+					continue
+				}
+				err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(bodyBytes, &response)
+				if err != nil {
+					results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
+					s.errors++
+					continue
 				}
 				resp.Body.Close()
 
@@ -139,7 +144,7 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 						Source: s.Name(), Type: subscraping.Error, Error: fmt.Errorf("%s", response.Message),
 					}
 					s.errors++
-					return
+					continue
 				}
 
 				if response.Meta.Pagination.Total > 0 {
@@ -148,16 +153,15 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 						if strings.ContainsAny(subdomain, "暂无权限") {
 							subdomain = ""
 						}
-						results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain, Response: responseData}
-						results <- subscraping.Result{Source: s.Name(), Type: subscraping.Response, Response: responseData}
+						results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain}
 						s.results++
 					}
+					responseStrings = append(responseStrings, string(bodyBytes))
 				}
 			}
 		}
-
+		subscraping.WriteResponseData(responseStrings, s.Name(), session.RespFileDirectory)
 	}()
-
 	return results
 }
 

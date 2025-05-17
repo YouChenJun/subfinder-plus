@@ -44,6 +44,7 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 	results := make(chan subscraping.Result)
 	s.errors = 0
 	s.results = 0
+	var responseStrings []string
 
 	go func() {
 		defer func(startTime time.Time) {
@@ -78,17 +79,14 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 		}
 		defer resp.Body.Close() // 确保 Body 被关
 
-		// 将响应体转换为字符串
-		responseData := string(bodyBytes)
-
 		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(bodyBytes, &response)
 		if err != nil {
 			results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
 			s.errors++
 			return
 		}
-
-		if response.Code == 401 || response.Code == 400 {
+		fmt.Println(response.Code)
+		if response.Code == 401 || response.Code == 400 || response.Code == 4024 {
 			results <- subscraping.Result{
 				Source: s.Name(), Type: subscraping.Error, Error: fmt.Errorf("%s", response.Message),
 			}
@@ -102,36 +100,43 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 				results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain}
 				s.results++
 			}
-			results <- subscraping.Result{Source: s.Name(), Type: subscraping.Response, Response: responseData}
+			responseStrings = append(responseStrings, string(bodyBytes))
 		}
 		//count pages
 		pages = int(response.Data.Total/100) + 1
-
 		if pages > 1 {
 			for currentPage := 2; currentPage <= pages; currentPage++ {
+				time.Sleep(5 * time.Second)
 				resp, err = session.SimpleGet(ctx, fmt.Sprintf("https://hunter.qianxin.com/openApi/search?api-key=%s&search=%s&page=%d&page_size=100&is_web=3", randomApiKey, qbase64, currentPage))
 				if err != nil && resp == nil {
 					results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
 					s.errors++
 					session.DiscardHTTPResponse(resp)
-					return
+					continue
 				}
-
-				err = jsoniter.NewDecoder(resp.Body).Decode(&response)
+				// 先读取响应体内容
+				bodyBytes, err = ioutil.ReadAll(resp.Body)
 				if err != nil {
 					results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
 					s.errors++
-					resp.Body.Close()
 					return
 				}
-				resp.Body.Close()
+				defer resp.Body.Close() // 确保 Body 被关
+
+				err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(bodyBytes, &response)
+				if err != nil {
+					results <- subscraping.Result{Source: s.Name(), Type: subscraping.Error, Error: err}
+					s.errors++
+					continue
+				}
+				fmt.Println(response.Code)
 				//if code == 4024 this means that your api may have insufficient balance
 				if response.Code == 401 || response.Code == 400 || response.Code == 4024 {
 					results <- subscraping.Result{
 						Source: s.Name(), Type: subscraping.Error, Error: fmt.Errorf("%s", response.Message),
 					}
 					s.errors++
-					return
+					continue
 				}
 
 				if response.Data.Total > 0 {
@@ -140,10 +145,11 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 						results <- subscraping.Result{Source: s.Name(), Type: subscraping.Subdomain, Value: subdomain}
 						s.results++
 					}
-					results <- subscraping.Result{Source: s.Name(), Type: subscraping.Response, Response: responseData}
+					responseStrings = append(responseStrings, string(bodyBytes))
 				}
 			}
 		}
+		subscraping.WriteResponseData(responseStrings, s.Name(), session.RespFileDirectory)
 	}()
 
 	return results

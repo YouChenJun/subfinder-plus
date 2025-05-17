@@ -1,7 +1,12 @@
 package subscraping
 
 import (
+	"bufio"
+	"errors"
+	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/projectdiscovery/gologger"
@@ -39,4 +44,84 @@ func createMultiPartKey(key string) (keyPartA, keyPartB string, ok bool) {
 	}
 
 	return
+}
+
+func WriteResponseData(response []string, source string, RespFileDirectory string) {
+	if !strings.HasSuffix(RespFileDirectory, "/") {
+		RespFileDirectory += "/"
+	}
+
+	writers := make(map[string]struct {
+		file   *os.File
+		writer *bufio.Writer
+	})
+
+	// 统一清理资源
+	defer func() {
+		for _, w := range writers {
+			if err := w.writer.Flush(); err != nil {
+				fmt.Printf("刷新缓冲区失败: %v\n", err)
+			}
+			if err := w.file.Close(); err != nil {
+				fmt.Printf("关闭文件失败: %v\n", err)
+			}
+		}
+	}()
+	for _, data := range response {
+		if source == "" || data == "" {
+			continue
+		}
+		w, exists := writers[source]
+		if !exists {
+			filename := filepath.Join(RespFileDirectory, source+".json")
+			file, err := createFile(filename, false)
+			if err != nil {
+				fmt.Printf("创建文件失败 [%s]: %w\n", filename, err)
+				continue
+			}
+			w = struct {
+				file   *os.File
+				writer *bufio.Writer
+			}{
+				file:   file,
+				writer: bufio.NewWriter(file),
+			}
+			writers[source] = w
+		}
+
+		if _, err := w.writer.WriteString(data + "\n"); err != nil {
+			fmt.Printf("数据写入失败 [%s]: %w\n", source, err)
+			continue
+		}
+	}
+}
+
+func createFile(filename string, appendToFile bool) (*os.File, error) {
+	if filename == "" {
+		return nil, errors.New("empty filename")
+	}
+
+	dir := filepath.Dir(filename)
+
+	if dir != "" {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			err := os.MkdirAll(dir, os.ModePerm)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	var file *os.File
+	var err error
+	if appendToFile {
+		file, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	} else {
+		file, err = os.Create(filename)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }

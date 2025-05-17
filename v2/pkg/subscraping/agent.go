@@ -18,7 +18,7 @@ import (
 )
 
 // NewSession creates a new session object for a domain
-func NewSession(domain string, proxy string, multiRateLimiter *ratelimit.MultiLimiter, timeout int) (*Session, error) {
+func NewSession(domain string, proxy string, multiRateLimiter *ratelimit.MultiLimiter, timeout int, RespFileDirectory string) (*Session, error) {
 	Transport := &http.Transport{
 		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 100,
@@ -45,8 +45,8 @@ func NewSession(domain string, proxy string, multiRateLimiter *ratelimit.MultiLi
 		Transport: Transport,
 		Timeout:   time.Duration(timeout) * time.Second,
 	}
-
-	session := &Session{Client: client}
+	//这里把resp保存的路径封装到这里
+	session := &Session{Client: client, RespFileDirectory: RespFileDirectory}
 
 	// Initiate rate limit instance
 	session.MultiRateLimiter = multiRateLimiter
