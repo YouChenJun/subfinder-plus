@@ -85,7 +85,7 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 			s.errors++
 			return
 		}
-		fmt.Println(response.Code)
+
 		if response.Code == 401 || response.Code == 400 || response.Code == 4024 {
 			results <- subscraping.Result{
 				Source: s.Name(), Type: subscraping.Error, Error: fmt.Errorf("%s", response.Message),
@@ -129,7 +129,7 @@ func (s *Source) Run(ctx context.Context, domain string, session *subscraping.Se
 					s.errors++
 					continue
 				}
-				fmt.Println(response.Code)
+
 				//if code == 4024 this means that your api may have insufficient balance
 				if response.Code == 401 || response.Code == 400 || response.Code == 4024 {
 					results <- subscraping.Result{

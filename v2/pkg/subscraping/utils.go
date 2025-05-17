@@ -88,8 +88,14 @@ func WriteResponseData(response []string, source string, RespFileDirectory strin
 			}
 			writers[source] = w
 		}
-
-		if _, err := w.writer.WriteString(data + "\n"); err != nil {
+		// 判断是否需要添加换行符
+		var line string
+		if strings.HasSuffix(data, "\n") {
+			line = data // 数据自带换行，无需添加
+		} else {
+			line = data + "\n" // 数据无换行，手动添加
+		}
+		if _, err := w.writer.WriteString(line + "\n"); err != nil {
 			fmt.Printf("数据写入失败 [%s]: %w\n", source, err)
 			continue
 		}
